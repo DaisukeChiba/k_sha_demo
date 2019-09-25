@@ -126,10 +126,10 @@ class TableMaker{
 	for(let i = 0; i < attendTable.length; i++) {
 		entryAttendTableHTML = entryAttendTableHTML +
 		'<tr>' +
-		'<td><input type="text" size="5" name="no' + i + '" value="' + attendTable[i].no + '"></td>' +
-		'<td><input type="text" size="20" name="name' + i + '" value="' + attendTable[i].name + '"></td>' +
+		'<td><input type="text" size="3" name="no' + i + '" value="' + attendTable[i].no + '"></td>' +
+		'<td><input type="text" size="10" name="name' + i + '" value="' + attendTable[i].name + '"></td>' +
 		'<td><input type="text" size="5" name="pos' + i + '" value="' + attendTable[i].pos + '"></td>' +
-		'<td><input type="text" size="10" name="course' + i + '" value="' + attendTable[i].course + '"></td>'
+		'<td><input type="text" size="8" name="course' + i + '" value="' + attendTable[i].course + '"></td>'
 		if(attendTable[i].guest) {
 			// booleanは0または1の値で送信
 			entryAttendTableHTML = entryAttendTableHTML +
@@ -161,7 +161,7 @@ class TableMaker{
 			'<input type="radio" name="organizer' + i + '" value="0" checked="checked">無</td>';
 		}
 		entryAttendTableHTML = entryAttendTableHTML +
-		'<td><input type="text" size="10" name="adjustFee' + i + '" value="' + attendTable[i].adjustFee + '"></td>' +
+		'<td><input type="text" size="8" name="adjustFee' + i + '" value="' + attendTable[i].adjustFee + '"></td>' +
 		'</tr>'
 	};
 	entryAttendTableHTML = entryAttendTableHTML +
@@ -350,10 +350,10 @@ class TableMaker{
 		}
 
 		/************************************************/
-		/* 入力された役職ランクテーブルをJSON形式に整形 */
+		/* 入力された参加者テーブルをJSON形式に整形 */
 		/************************************************/
 		let submitAttendTable = new Array();
-		// 送信用のランクテーブルを整形
+		// 送信用の参加者テーブルを整形
 		for(let i = 0; i < data.length; i++) {
 			switch(i % 8) {
 				case 0:	// No
@@ -387,7 +387,6 @@ class TableMaker{
 					break;
 			}
 		}
-		console.log(submitAttendTable);
 		//console.log(JSON.stringify(submitAttendTable));
 		return submitAttendTable;
 	};
