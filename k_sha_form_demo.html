@@ -58,7 +58,7 @@ class TableMaker{
 	<hr />
 
 	<h3>傾斜計算結果</h3>
-	<table class="table table-hover table-responsive" id="resultTable"><tr><td>未計算</td></tr></table>
+	<table class="table table-hover table-condensed" id="resultTable"><tr><td>未計算</td></tr></table>
 
 
 <script type="text/javascript">
@@ -120,7 +120,7 @@ class TableMaker{
 	/* attendTable:参加者テーブルをフォーム形式で表示 */
 	/**************************************************/
 	let entryAttendTableHTML = '' +
-	'<form id="frmAttendTable" method="post"><table class="table table-striped table-responsive">' +
+	'<form id="frmAttendTable" method="post"><table class="table table-striped">' +
 		'<tr><th>No</th><th>氏名</th><th>役職</th><th>採用コース</th><th>ゲスト</th><th>500円四捨五入</th><th>幹事</th><th>調整金額</th></tr>' +
 	'';
 	for(let i = 0; i < attendTable.length; i++) {
