@@ -209,15 +209,23 @@ class TableMaker{
 				氏名: resultAttendTable[i].name,
 				役職: resultAttendTable[i].pos,
 				採用コース: resultAttendTable[i].course,
-				ゲスト: resultAttendTable[i].guest,
-				四捨五入: resultAttendTable[i].round,
-				幹事: resultAttendTable[i].organizer,
+				ゲスト: changeBool(resultAttendTable[i].guest),
+				四捨五入: changeBool(resultAttendTable[i].round),
+				幹事: changeBool(resultAttendTable[i].organizer),
 				調整金額: String(resultAttendTable[i].adjustFee).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,"),
 				傾斜金額: String(resultAttendTable[i].fee4).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,"),
 				傾斜割合: resultAttendTable[i].feeRate
 			} );
 		}
 		TableMaker.make({tableId: 'resultTable', json: resultFeeTable});
+	}
+
+	function changeBool(bool) {
+		if (bool) {
+			return 1;
+		} else {
+			return 0;
+		}
 	}
 
 	function submitRankTable() {
