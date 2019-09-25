@@ -1,0 +1,399 @@
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+	<!-- serializeArray()のためだけにjQueryを使用 -->
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
+	<!-- 傾斜ロジック -->
+	<script type="text/javascript" src="k_sha.js"></script>
+	<!-- 入力テストデータ -->
+	<script type="text/javascript" src="data.js"></script>
+
+	<script type="text/javascript">
+/**********************/
+/* 配列をテーブル表示 */
+/**********************/
+// https://qiita.com/oharato/items/f083e221d8f69c61d1a9
+
+class TableMaker{
+	// jsonはオブジェクトの配列
+	static make({tableId = null, json = null, headers = []} = {}){
+		const table = document.getElementById(tableId);
+		if(typeof json === 'string') json = JSON.parse(json);
+		table.innerHTML = this.build(json, headers);
+	}
+
+	static build(json, headers){
+		const rows = json.map(row => {
+			if(headers.length === 0) headers = Object.keys(row);
+			const tdsStr = headers.map(h => {
+				let v = row[h];
+				if(h === 'THUMBNAIL') v = `<img src="${v}">`;
+				return `<td class="${h}">${v}</td>`;
+			}).join('')
+			return `<tr>${tdsStr}</tr>`;
+		});
+		const thsStr = headers.map(h => `<th class="${h}">${h}</th>`).join('');
+		const rowsStr = rows.join('');
+		return `<thead><tr>${thsStr}</tr></thead><tbody>${rowsStr}</tbody>`;
+	}
+}
+	</script>
+</head>
+
+<body>
+
+	<!--
+	<h3>【入力】rankTable:役職ランクテーブル</h3><div id="entryRankTable"></div>
+	<h3>【入力】courseTable:採用コーステーブル</h3><div id="entryCourseTable"></div>
+	-->
+	<div id="entryAttendTable">参加者情報</div>
+	<div id="entryMaxRate"></div>
+	<div id="entryPayment"></div>
+	<button type="button" onclick="submitTable()">傾斜計算</button></input>
+	<hr />
+
+	<h3>傾斜計算結果</h3>
+	<table class="table table-hover table-responsive" id="resultTable"><tr><td>未計算</td></tr></table>
+
+
+<script type="text/javascript">
+	/****************************************************/
+	/* rankTable:役職ランクテーブルをフォーム形式で表示 */
+	/****************************************************/
+/*
+	let entryRankTableHTML = '' +
+	'<form id="frmRankTable" method="post"><table class="table table-striped table-responsive">' +
+		'<tr><th>役職</th><th>ランク</th><th>採用コース補正</th></tr>' +
+	'';
+	for(let i = 0; i < rankTable.length; i++) {
+		entryRankTableHTML = entryRankTableHTML +
+		'<tr>' +
+		'<td><input type="text" size="5" name="pos' + i + '" value="' + rankTable[i].pos + '"></td>' +
+		'<td><input type="text" size="5" name="rank' + i + '" value="' + rankTable[i].rank + '"></td>'
+		if(rankTable[i].cor) {
+			// cor(boolean)は0または1の値で送信
+			entryRankTableHTML = entryRankTableHTML +
+			'<td><input type="radio" name="cor' + i + '" value="1" checked="checked">有 ' +
+			'<input type="radio" name="cor' + i + '" value="0">無</td>';
+		} else {
+			entryRankTableHTML = entryRankTableHTML +
+			'<td><input type="radio" name="cor' + i + '" value="1">有 ' +
+			'<input type="radio" name="cor' + i + '" value="0" checked="checked">無</td>';
+		}
+		entryRankTableHTML = entryRankTableHTML + '</tr>'
+	};
+	entryRankTableHTML = entryRankTableHTML +
+	'</table>' +
+	//'<button type="button" onclick="submitRankTable()">送信</button></input>' +
+	'</form>';
+	document.getElementById("entryRankTable").innerHTML = entryRankTableHTML;
+*/
+
+	/******************************************************/
+	/* courseTable:採用コーステーブルをフォーム形式で表示 */
+	/******************************************************/
+/*
+	let entryCourseTableHTML = '' +
+	'<form id="frmCourseTable" method="post"><table class="table table-striped table-responsive">' +
+		'<tr><th>コース</th><th>ランク</th></tr>' +
+	'';
+	for(let i = 0; i < courseTable.length; i++) {
+		entryCourseTableHTML = entryCourseTableHTML +
+		'<tr>' +
+		'<td><input type="text" size="10" name="course' + i + '" value="' + courseTable[i].course + '"></td>' +
+		'<td><input type="text" size="5" name="rank' + i + '" value="' + courseTable[i].rank + '"></td>' +
+		'</tr>'
+	};
+	entryCourseTableHTML = entryCourseTableHTML +
+	'</table>' +
+	//'<button type="button" onclick="submitCourseTable()">送信</button></input>' +
+	'</form>';
+	document.getElementById("entryCourseTable").innerHTML = entryCourseTableHTML;
+*/
+
+	/**************************************************/
+	/* attendTable:参加者テーブルをフォーム形式で表示 */
+	/**************************************************/
+	let entryAttendTableHTML = '' +
+	'<form id="frmAttendTable" method="post"><table class="table table-striped table-responsive">' +
+		'<tr><th>No</th><th>氏名</th><th>役職</th><th>採用コース</th><th>ゲスト</th><th>500円四捨五入</th><th>幹事</th><th>調整金額</th></tr>' +
+	'';
+	for(let i = 0; i < attendTable.length; i++) {
+		entryAttendTableHTML = entryAttendTableHTML +
+		'<tr>' +
+		'<td><input type="text" size="5" name="no' + i + '" value="' + attendTable[i].no + '"></td>' +
+		'<td><input type="text" size="20" name="name' + i + '" value="' + attendTable[i].name + '"></td>' +
+		'<td><input type="text" size="5" name="pos' + i + '" value="' + attendTable[i].pos + '"></td>' +
+		'<td><input type="text" size="10" name="course' + i + '" value="' + attendTable[i].course + '"></td>'
+		if(attendTable[i].guest) {
+			// booleanは0または1の値で送信
+			entryAttendTableHTML = entryAttendTableHTML +
+			'<td><input type="radio" name="guest' + i + '" value="1" checked="checked">有 ' +
+			'<input type="radio" name="guest' + i + '" value="0">無</td>';
+		} else {
+			entryAttendTableHTML = entryAttendTableHTML +
+			'<td><input type="radio" name="guest' + i + '" value="1">有 ' +
+			'<input type="radio" name="guest' + i + '" value="0" checked="checked">無</td>';
+		}
+		if(attendTable[i].round) {
+			// booleanは0または1の値で送信
+			entryAttendTableHTML = entryAttendTableHTML +
+			'<td><input type="radio" name="round' + i + '" value="1" checked="checked">有 ' +
+			'<input type="radio" name="round' + i + '" value="0">無</td>';
+		} else {
+			entryAttendTableHTML = entryAttendTableHTML +
+			'<td><input type="radio" name="round' + i + '" value="1">有 ' +
+			'<input type="radio" name="round' + i + '" value="0" checked="checked">無</td>';
+		}
+		if(attendTable[i].organizer) {
+			// booleanは0または1の値で送信
+			entryAttendTableHTML = entryAttendTableHTML +
+			'<td><input type="radio" name="organizer' + i + '" value="1" checked="checked">有 ' +
+			'<input type="radio" name="organizer' + i + '" value="0">無</td>';
+		} else {
+			entryAttendTableHTML = entryAttendTableHTML +
+			'<td><input type="radio" name="organizer' + i + '" value="1">有 ' +
+			'<input type="radio" name="organizer' + i + '" value="0" checked="checked">無</td>';
+		}
+		entryAttendTableHTML = entryAttendTableHTML +
+		'<td><input type="text" size="10" name="adjustFee' + i + '" value="' + attendTable[i].adjustFee + '"></td>' +
+		'</tr>'
+	};
+	entryAttendTableHTML = entryAttendTableHTML +
+	'</table>' +
+	//'<button type="button" onclick="submitAttendTable()">送信</button></input>' +
+	'</form>';
+	document.getElementById("entryAttendTable").innerHTML = entryAttendTableHTML;
+
+	/****************************************/
+	/* maxRate:最大倍率をフォーム形式で表示 */
+	/****************************************/
+	let entryMaxRateHTML = '' +
+	'<form id="frmMaxRate" method="post">最大倍率　' +
+	'<input type="text" size="5" id="id_maxRate" name="maxRate" value="' + maxRate.toFixed(1) + '">' +
+	'</form>';
+	document.getElementById("entryMaxRate").innerHTML = entryMaxRateHTML;
+
+	/****************************************/
+	/* payment:支払総額をフォーム形式で表示 */
+	/****************************************/
+	let entryPaymentHTML = '' +
+	'<form id="frmPayment" method="post">支払総額　' +
+	'<input type="text" size="10" id="id_payment" name="payment" value="' + payment + '">' +
+	'</form>';
+	document.getElementById("entryPayment").innerHTML = entryPaymentHTML;
+
+	function submitTable() {
+	/**************************/
+	/* 傾斜計算ボタン押下処理 */
+	/**************************/
+		// フォームへの入力値をJSONに変換し、傾斜計算ロジックを呼び出す
+		entryRankTable = submitRankTable();
+		entryCourseTable = submitCourseTable();
+		entryAttendTable = submitAttendTable();
+		entryMaxRate = Number(document.forms.frmMaxRate.id_maxRate.value);
+		entryPayment = Number(document.forms.frmPayment.id_payment.value);
+
+		//console.log(k_sha(entryRankTable, entryCourseTable, entryMaxRate, entryPayment, entryAttendTable));
+		// 傾斜計算結果をテーブル表示
+		// 20190925 必要列のみ取り出し
+		let resultAttendTable = k_sha(rankTable, courseTable, entryMaxRate, entryPayment, entryAttendTable);
+		let resultFeeTable = new Array();
+		for(let i = 0; i < resultAttendTable.length; i++) {
+			resultFeeTable[i] = ( {
+				氏名: resultAttendTable[i].name,
+				役職: resultAttendTable[i].pos,
+				採用コース: resultAttendTable[i].course,
+				ゲスト: resultAttendTable[i].guest,
+				四捨五入: resultAttendTable[i].round,
+				幹事: resultAttendTable[i].organizer,
+				調整金額: String(resultAttendTable[i].adjustFee).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,"),
+				傾斜金額: String(resultAttendTable[i].fee4).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,"),
+				傾斜割合: resultAttendTable[i].feeRate
+			} );
+		}
+		TableMaker.make({tableId: 'resultTable', json: resultFeeTable});
+	}
+
+	function submitRankTable() {
+	/******************************/
+	/* 役職ランクテーブル送信処理 */
+	/******************************/
+		// FORMデータの取得
+		let data = $('#frmRankTable').serializeArray();
+
+		/******************************************/
+		/* 入力された役職ランクテーブルをチェック */
+		/******************************************/
+		for(let i = 0; i < data.length; i++) {
+			switch(i % 3) {
+				case 0:
+					// 役職
+					break;
+				case 1:
+					// ランク
+					break;
+				case 2:
+					// 採用コース補正
+					break;
+			}
+		}
+
+		/************************************************/
+		/* 入力された役職ランクテーブルをJSON形式に整形 */
+		/************************************************/
+		let submitRankTable = new Array();
+		// 送信用のランクテーブルを整形
+		for(let i = 0; i < data.length; i++) {
+			switch(i % 3) {
+				case 0:	// 役職
+					pos = data[i].value;
+					break;
+				case 1:	// ランク
+					rank = Number(data[i].value);
+					break;
+				case 2:	// 採用コース補正
+					cor = Boolean(Number(data[i].value));
+					keyValue = {"pos": pos, "rank": rank, "cor": cor}
+					submitRankTable.push(keyValue);
+					break;
+			}
+		}
+		//console.log(JSON.stringify(submitRankTable));
+		return submitRankTable;
+	};
+
+	function submitCourseTable() {
+	/******************************/
+	/* 採用コーステーブル送信処理 */
+	/******************************/
+		// FORMデータの取得
+		let data = $('#frmCourseTable').serializeArray();
+
+		/******************************************/
+		/* 入力された採用コーステーブルをチェック */
+		/******************************************/
+		for(let i = 0; i < data.length; i++) {
+			switch(i % 2) {
+				case 0:
+					// 採用コース
+					break;
+				case 1:
+					// ランク
+					break;
+			}
+		}
+
+		/************************************************/
+		/* 入力された採用コーステーブルをJSON形式に整形 */
+		/************************************************/
+		let submitCourseTable = new Array();
+		// 送信用のランクテーブルを整形
+		for(let i = 0; i < data.length; i++) {
+			switch(i % 2) {
+				case 0:	// 採用コース
+					course = data[i].value;
+					break;
+				case 1:	// ランク
+					rank = Number(data[i].value);
+					keyValue = {"course": course, "rank": rank}
+					submitCourseTable.push(keyValue);
+					break;
+			}
+		}
+		//console.log(JSON.stringify(submitCourseTable));
+		return submitCourseTable;
+	};
+
+	function submitAttendTable() {
+	/**************************/
+	/* 参加者テーブル送信処理 */
+	/**************************/
+		// FORMデータの取得
+		let data = $('#frmAttendTable').serializeArray();
+
+		/**************************************/
+		/* 入力された参加者テーブルをチェック */
+		/**************************************/
+		for(let i = 0; i < data.length; i++) {
+			switch(i % 8) {
+				case 0:
+					// No
+					break;
+				case 1:
+					// 氏名
+					break;
+				case 2:
+					// 役職
+					break;
+				case 3:
+					// 採用コース
+					break;
+				case 4:
+					// ゲスト
+					break;
+				case 5:
+					// 500円四捨五入
+					break;
+				case 6:
+					// 幹事
+					break;
+				case 7:
+					// 調整金額
+					break;
+			}
+		}
+
+		/************************************************/
+		/* 入力された役職ランクテーブルをJSON形式に整形 */
+		/************************************************/
+		let submitAttendTable = new Array();
+		// 送信用のランクテーブルを整形
+		for(let i = 0; i < data.length; i++) {
+			switch(i % 8) {
+				case 0:	// No
+					no = Number(data[i].value);
+					if(no == "") {
+						i = i + 7;
+					}
+					break;
+				case 1:	// 氏名
+					name = data[i].value;
+					break;
+				case 2:	// 役職
+					pos = data[i].value;
+					break;
+				case 3:	// 採用コース
+					course = data[i].value;
+					break;
+				case 4:	// ゲスト
+					guest = Boolean(Number(data[i].value));
+					break;
+				case 5:	// 500円四捨五入
+					round = Boolean(Number(data[i].value));
+					break;
+				case 6:	// 幹事
+					organizer = Boolean(Number(data[i].value));;
+					break;
+				case 7:	// 調整金額
+					adjustFee = Number(data[i].value);
+					keyValue = {"no": no, "name": name, "pos": pos, "course": course, "guest": guest, "round":round , "organizer":organizer , "adjustFee": adjustFee}
+					submitAttendTable.push(keyValue);
+					break;
+			}
+		}
+		console.log(submitAttendTable);
+		//console.log(JSON.stringify(submitAttendTable));
+		return submitAttendTable;
+	};
+
+</script>
+
+</body>
+
+</html>

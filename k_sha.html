@@ -1,0 +1,95 @@
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<!-- 傾斜ロジック -->
+	<script type="text/javascript" src="k_sha.js"></script>
+	<!-- 入力テストデータ -->
+	<script type="text/javascript" src="data.js"></script>
+
+	<script type="text/javascript">
+/**********************/
+/* 配列をテーブル表示 */
+/**********************/
+// https://qiita.com/oharato/items/f083e221d8f69c61d1a9
+
+class TableMaker{
+	// jsonはオブジェクトの配列
+	static make({tableId = null, json = null, headers = []} = {}){
+		const table = document.getElementById(tableId);
+		if(typeof json === 'string') json = JSON.parse(json);
+		table.innerHTML = this.build(json, headers);
+	}
+
+	static build(json, headers){
+		const rows = json.map(row => {
+			if(headers.length === 0) headers = Object.keys(row);
+			const tdsStr = headers.map(h => {
+				let v = row[h];
+				if(h === 'THUMBNAIL') v = `<img src="${v}">`;
+				return `<td class="${h}">${v}</td>`;
+			}).join('')
+			return `<tr>${tdsStr}</tr>`;
+		});
+		const thsStr = headers.map(h => `<th class="${h}">${h}</th>`).join('');
+		const rowsStr = rows.join('');
+		return `<thead><tr>${thsStr}</tr></thead><tbody>${rowsStr}</tbody>`;
+	}
+}
+	</script>
+</head>
+
+<body>
+
+	<h3>【入力】rankTable:役職ランクテーブル</h3>
+	<table border="1" id="rankTable"></table>
+
+	<hr />
+
+	<h3>【入力】courseTable:採用コースランクテーブル</h3>
+	<table border="1" id="courseTable"></table>
+
+	<hr />
+
+	<h3>【入力】attendTable:参加者テーブル</h3>
+	<table border="1" id="attendTable"></table>
+
+	<hr />
+
+	<h3>【入力】maxRate:最大倍率</h3>
+	<div id="maxRate"></div>
+
+	<hr />
+
+	<h3>【入力】payment:支払総額</h3>
+	<div id="payment"></div>
+
+	<hr />
+
+	<h3>【出力】attendTable:参加者テーブル</h3>
+	<table border="1" id="resultTable"></table>
+
+<script type="text/javascript">
+
+	// 入力データをHTMLテーブルで表示
+	TableMaker.make({tableId: 'rankTable', json: rankTable});
+	TableMaker.make({tableId: 'courseTable', json: courseTable});
+	TableMaker.make({tableId: 'attendTable', json: attendTable});
+
+	// 入力データを表示
+	document.getElementById("maxRate").innerText = maxRate;
+	document.getElementById("payment").innerText = payment;
+
+	// 傾斜計算結果をHTMLテーブルで表示
+	TableMaker.make({tableId: 'resultTable', json: k_sha(rankTable, courseTable, maxRate, payment, attendTable)});
+
+	let array = k_sha(rankTable, courseTable, maxRate, payment, attendTable);
+	console.log(array);
+
+	//console.log(k_sha(rankTable, courseTable, maxRate, payment, attendTable));
+
+</script>
+
+</body>
+
+</html>
